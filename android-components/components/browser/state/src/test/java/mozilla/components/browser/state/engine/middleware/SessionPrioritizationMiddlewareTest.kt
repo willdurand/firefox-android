@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.engine.middleware
 
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -17,8 +18,12 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.Mockito.verify
+import mozilla.components.support.base.log.logger.Logger
 
 class SessionPrioritizationMiddlewareTest {
+    private val logger = Logger("SessionPrioritizationMiddlewareTest")
+
+    // todocathy all tests need to update with the correct SessionPrioritizationMiddleware parameters
 
     @Test
     fun `GIVEN a linked session WHEN UnlinkEngineSessionAction THEN set the DEFAULT priority to the unlinked tab`() {
@@ -38,6 +43,27 @@ class SessionPrioritizationMiddlewareTest {
 
         verify(engineSession1).updateSessionPriority(DEFAULT)
         assertEquals("", middleware.previousHighestPriorityTabId)
+    }
+
+    @Test
+    fun `GIVEN a linked session WHEN CheckForFormDataAction THEN update the selected linked tab priority to DEFAULT if there is no form data and HIGH when there is form data`() {
+        val middleware = SessionPrioritizationMiddleware()
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "1"),
+                ),
+            ),
+            middleware = listOf(middleware),
+        )
+        val engineSession1: EngineSession = mock()
+
+        store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
+        store.dispatch(ContentAction.CheckForFormDataAction("1", true)).joinBlocking()
+        verify(engineSession1).updateSessionPriority(HIGH)
+
+        store.dispatch(ContentAction.CheckForFormDataAction("1", false)).joinBlocking()
+        verify(engineSession1).updateSessionPriority(DEFAULT)
     }
 
     @Test
@@ -64,7 +90,7 @@ class SessionPrioritizationMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a previous selected tab with priority DEFAULT WHEN selecting and linking a new tab THEN update the previous tab to DEFAULT and the new one to HIGH`() {
+    fun `GIVEN a previous selected tab with priority DEFAULT WHEN selecting and linking a new tab THEN update the new one to HIGH and the previous tab based on if it contains form data`() {
         val middleware = SessionPrioritizationMiddleware()
         val store = BrowserStore(
             initialState = BrowserState(
@@ -94,7 +120,7 @@ class SessionPrioritizationMiddlewareTest {
         store.dispatch(EngineAction.LinkEngineSessionAction("2", engineSession2)).joinBlocking()
 
         assertEquals("2", middleware.previousHighestPriorityTabId)
-        verify(engineSession1).updateSessionPriority(DEFAULT)
+        verify(engineSession1).checkForFormData()
         verify(engineSession2).updateSessionPriority(HIGH)
     }
 

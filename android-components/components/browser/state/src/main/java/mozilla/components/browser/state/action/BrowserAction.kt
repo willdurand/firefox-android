@@ -784,6 +784,17 @@ sealed class ContentAction : BrowserAction() {
      * Updates whether the toolbar should be forced to expand or have it follow the default behavior.
      */
     data class UpdateExpandedToolbarStateAction(val sessionId: String, val expanded: Boolean) : ContentAction()
+
+    /**
+     * Updates the [ContentState] with the provided [tabId] to the appropriate priority based on any
+     * existing form data.
+     */
+    data class CheckForFormDataAction(val tabId: String, val containsFormData : Boolean) : ContentAction()
+
+    /**
+     * Lowers priority of the [tabId] after certain period of time
+     */
+    data class ClearHighPrioritySessionAction(val tabId: String) : ContentAction()
 }
 
 /**

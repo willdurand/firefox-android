@@ -299,6 +299,14 @@ internal object ContentStateReducer {
             is ContentAction.UpdateExpandedToolbarStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(showToolbarAsExpanded = action.expanded)
             }
+            is ContentAction.CheckForFormDataAction -> updateContentState(state, action.tabId) {
+                // todocathy there is no store parameter to update, but this cannot be removed
+                it.copy(desktopMode = action.containsFormData)
+            }
+            is ContentAction.ClearHighPrioritySessionAction -> updateContentState(state, action.tabId) {
+                // todocathy there is no store parameter to update, but this cannot be removed
+                it.copy(desktopMode = action.tabId == "0")
+            }
         }
     }
     private fun consumeDownload(state: BrowserState, sessionId: String, downloadId: String): BrowserState {
