@@ -34,8 +34,10 @@ class CookieBannerExceptionDetailsPanel(
         setContentView(binding.root)
         expandBottomSheet()
         setListeners()
-        updateViews(cookieBannerExceptionStore.state.hasException)
-        bindSwitchItem(cookieBannerExceptionStore.state.hasException)
+        val hasException =
+            cookieBannerExceptionStore.state.cookieBannerExceptionStatus is CookieBannerExceptionStatus.HasException
+        updateViews(hasException)
+        bindSwitchItem(hasException)
         updateSwitchItem()
     }
 
@@ -53,9 +55,11 @@ class CookieBannerExceptionDetailsPanel(
 
     private fun updateSwitchItem() {
         binding.cookieBannerExceptionDetailsSwitch.binding.switchWidget.setOnClickListener {
-            val isChecked = binding.cookieBannerExceptionDetailsSwitch.binding.switchWidget.isChecked
+            val isChecked =
+                binding.cookieBannerExceptionDetailsSwitch.binding.switchWidget.isChecked
             defaultCookieBannerInteractor.handleToggleCookieBannerException(isChecked)
             updateViews(!isChecked)
+            dismiss()
         }
     }
 
@@ -70,7 +74,8 @@ class CookieBannerExceptionDetailsPanel(
             } else {
                 R.string.cookie_banner_exception_panel_switch_state_on
             }
-        binding.cookieBannerExceptionDetailsSwitch.binding.description.text = context.getString(stringID)
+        binding.cookieBannerExceptionDetailsSwitch.binding.description.text =
+            context.getString(stringID)
     }
 
     private fun bindTitle(hasException: Boolean) {

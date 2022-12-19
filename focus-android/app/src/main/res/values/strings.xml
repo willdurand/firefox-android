@@ -708,6 +708,9 @@
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">settings</string>
 
+    <!-- Text to indicate that the site doesn't have a cookie banner or that it was not detected, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_no_cookie_banner_detected">No cookie banner detected</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Autoplay</string>
 
