@@ -23,6 +23,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.ExtensionUI
 import org.mozilla.fenix.autofill.AutofillConfirmActivity
 import org.mozilla.fenix.autofill.AutofillSearchActivity
 import org.mozilla.fenix.autofill.AutofillUnlockActivity
@@ -156,6 +157,10 @@ class Components(private val context: Context) {
 
     val addonManager by lazyMonitored {
         AddonManager(core.store, core.engine, addonCollectionProvider, addonUpdater)
+    }
+
+    val extensionUI by lazyMonitored {
+        ExtensionUI(context)
     }
 
     val analytics by lazyMonitored { Analytics(context) }

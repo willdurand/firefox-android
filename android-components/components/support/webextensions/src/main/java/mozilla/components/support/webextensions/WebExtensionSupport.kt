@@ -63,6 +63,7 @@ object WebExtensionSupport {
     private var onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null
     private var onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null
     private var onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null
+    private var onInstallPermissionRequest: ((WebExtension) -> Boolean) = { _ -> true }
 
     val installedExtensions = ConcurrentHashMap<String, WebExtension>()
 
@@ -163,6 +164,8 @@ object WebExtensionSupport {
      * @param onExtensionsLoaded (optional) callback invoked when the extensions are loaded by the
      * engine. Note that the UI (browser/page actions etc.) may not be initialized at this point.
      * System add-ons (built-in extensions) will not be passed along.
+     * @param onInstallPermissionRequest (optional) Invoked when a web extension is about to be
+     * installed and needs the user to grant permissions to continue the install.
      */
     @Suppress("LongParameterList")
     fun initialize(
@@ -174,11 +177,13 @@ object WebExtensionSupport {
         onSelectTabOverride: ((WebExtension?, String) -> Unit)? = null,
         onUpdatePermissionRequest: onUpdatePermissionRequest? = { _, _, _, _ -> },
         onExtensionsLoaded: ((List<WebExtension>) -> Unit)? = null,
+        onInstallPermissionRequest: ((WebExtension) -> Boolean) = { _ -> true },
     ) {
         this.onUpdatePermissionRequest = onUpdatePermissionRequest
         this.onExtensionsLoaded = onExtensionsLoaded
         this.onCloseTabOverride = onCloseTabOverride
         this.onSelectTabOverride = onSelectTabOverride
+        this.onInstallPermissionRequest = onInstallPermissionRequest
 
         // Queries the runtime for installed extensions and adds them to the store
         registerInstalledExtensions(store, runtime)
@@ -256,10 +261,7 @@ object WebExtensionSupport {
                 }
 
                 override fun onInstallPermissionRequest(extension: WebExtension): Boolean {
-                    // Our current installation flow has us approve permissions before we call
-                    // install on the engine. Therefore we can just approve the permission request
-                    // here during installation.
-                    return true
+                    return this@WebExtensionSupport.onInstallPermissionRequest(extension)
                 }
 
                 override fun onUpdatePermissionRequest(
