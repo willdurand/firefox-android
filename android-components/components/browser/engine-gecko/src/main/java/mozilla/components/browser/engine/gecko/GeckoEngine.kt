@@ -374,6 +374,15 @@ class GeckoEngine(
             override fun onInstalled(extension: org.mozilla.geckoview.WebExtension) {
                 webExtensionDelegate.onInstalled(GeckoWebExtension(extension, runtime))
             }
+
+            override fun onProcessSpawningDisabled(): GeckoResult<AllowOrDeny> {
+                val result = GeckoResult<AllowOrDeny>()
+                webExtensionDelegate.onProcessSpawningDisabled {
+                        enableProcessSpawning ->
+                    if (enableProcessSpawning) result.complete(AllowOrDeny.ALLOW) else result.complete(AllowOrDeny.DENY)
+                }
+                return result
+            }
         }
 
         runtime.webExtensionController.setPromptDelegate(promptDelegate)

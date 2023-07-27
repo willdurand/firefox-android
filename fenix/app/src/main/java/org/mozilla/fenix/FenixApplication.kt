@@ -35,6 +35,7 @@ import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.GlobalPlacesDependencyProvider
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.concept.push.PushProcessor
@@ -669,6 +670,31 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                     subscribeForNewAddonsIfNeeded(components.supportedAddonsChecker, extensions)
                 },
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest,
+                onExtensionsProcessSpawningDisabled = {
+                        enableProcessSpawning ->
+                    components.core.store.state.selectedTab?.engineState?.engineSession?.notifyObservers {
+                        onPromptRequest(
+                            PromptRequest.Confirm(
+                                title = "Extensions have crashed",
+                                message = "Extensions have crashed and cannot be recovered. This commonly occurs when the device is low on memory. Please try closing other applications and restarting Firefox.",
+                                positiveButtonTitle = "Try again",
+                                negativeButtonTitle = "Continue without extensions",
+                                neutralButtonTitle = "",
+                                onConfirmPositiveButton = {
+                                    enableProcessSpawning.invoke(true)
+                                },
+                                onConfirmNegativeButton = {
+                                    enableProcessSpawning.invoke(false)
+                                },
+                                onConfirmNeutralButton = {},
+                                onDismiss = {
+                                    enableProcessSpawning.invoke(false)
+                                },
+                            ),
+                        )
+                    }
+                },
+
             )
         } catch (e: UnsupportedOperationException) {
             Logger.error("Failed to initialize web extension support", e)

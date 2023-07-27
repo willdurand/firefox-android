@@ -135,4 +135,9 @@ interface WebExtensionDelegate {
      * of installing / uninstalling extensions by the user.
      */
     fun onExtensionListUpdated() = Unit
+
+    /**
+     * Invoked when the extension process has crashed
+     */
+    fun onProcessSpawningDisabled(enableProcessSpawning: ((Boolean) -> Unit)) = Unit
 }
