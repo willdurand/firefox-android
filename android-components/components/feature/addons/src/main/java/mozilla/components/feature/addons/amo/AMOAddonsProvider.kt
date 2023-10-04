@@ -266,6 +266,8 @@ class AMOAddonsProvider(
                     }
                 }
             }
+        } else if (addon.iconRequest != null) {
+            bitmap = addon.iconRequest.invoke()
         }
 
         return bitmap
@@ -421,7 +423,6 @@ internal fun JSONObject.toAddon(language: String? = null): Addon {
             id = getSafeString("guid"),
             authors = getAuthors(),
             categories = getCategories(),
-            createdAt = getSafeString("created"),
             updatedAt = getSafeString("last_updated"),
             downloadId = download?.getDownloadId() ?: "",
             downloadUrl = download?.getDownloadUrl() ?: "",

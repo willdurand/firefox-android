@@ -417,6 +417,21 @@ data class Metadata(
      */
     val baseUrl: String,
 
+    val fullDescription: String,
+
+    val downloadUrl: String,
+
+    val updateDate: String,
+
+    val averageRating: Float,
+
+    val reviewCount: Int,
+
+    val creatorName: String,
+
+    val creatorUrl: String,
+
+    val iconRequest: (suspend () -> Bitmap?)? = null,
     /**
      * Whether or not this extension is temporary i.e. installed using a debug tool
      * such as web-ext, and won't be retained when the application exits.

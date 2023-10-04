@@ -6,6 +6,8 @@ package mozilla.components.browser.engine.gecko.webextension
 
 import android.graphics.Bitmap
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
@@ -351,11 +353,23 @@ class GeckoWebExtension(
         return nativeExtension.metaData.let {
             Metadata(
                 name = it.name,
+                fullDescription = it.fullDescription.orEmpty(),
+                downloadUrl = it.downloadUrl.orEmpty(),
+                updateDate = it.updateDate.orEmpty(),
+                averageRating = it.averageRating.toFloat(),
+                reviewCount = it.reviewCount,
                 description = it.description,
                 developerName = it.creatorName,
                 developerUrl = it.creatorUrl,
                 homePageUrl = it.homepageUrl,
+                creatorName = it.creatorName.orEmpty(),
+                creatorUrl = it.creatorUrl.orEmpty(),
                 version = it.version,
+                iconRequest = {
+                    withContext(Dispatchers.Main) {
+                        it.icon.getBitmap(64).await()
+                    }
+                },
                 permissions = it.permissions.toList(),
                 // Origins is marked as @NonNull but may be null: https://bugzilla.mozilla.org/show_bug.cgi?id=1629957
                 hostPermissions = it.origins.orEmpty().toList(),

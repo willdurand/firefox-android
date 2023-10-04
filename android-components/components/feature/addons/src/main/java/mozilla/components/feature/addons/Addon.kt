@@ -32,7 +32,6 @@ import mozilla.components.concept.engine.webextension.WebExtension
  * @property iconUrl The URL to icon for the add-on.
  * @property siteUrl The (absolute) add-on detail URL.
  * @property rating The rating information of this add-on.
- * @property createdAt The date the add-on was created.
  * @property updatedAt The date of the last time the add-on was updated by its developer(s).
  * @property installedState Holds the state of the installed web extension for this add-on. Null, if
  * the [Addon] is not installed.
@@ -54,8 +53,8 @@ data class Addon(
     val iconUrl: String = "",
     val siteUrl: String = "",
     val rating: Rating? = null,
-    val createdAt: String = "",
     val updatedAt: String = "",
+    val iconRequest: (suspend () -> Bitmap?)? = null,
     val installedState: InstalledState? = null,
     val defaultLocale: String = DEFAULT_LOCALE,
 ) : Parcelable {
@@ -287,22 +286,33 @@ data class Addon(
          */
         fun newFromWebExtension(extension: WebExtension, installedState: InstalledState? = null): Addon {
             val name = extension.getMetadata()?.name ?: extension.id
-            val description = extension.getMetadata()?.description ?: extension.id
+            val description = extension.getMetadata()?.description ?: ""
+            // Fallback to the "short" description (a.k.a. summary) if there is no full description.
+            val fullDescription = extension.getMetadata()?.fullDescription ?: description
             val permissions = extension.getMetadata()?.permissions.orEmpty() +
                 extension.getMetadata()?.hostPermissions.orEmpty()
+            val average = extension.getMetadata()?.averageRating ?: 0f
+            val reviewCount = extension.getMetadata()?.reviewCount ?: 0
+            val creatorName = extension.getMetadata()?.creatorName.orEmpty()
+            val creatorUrl = extension.getMetadata()?.creatorUrl.orEmpty()
+            val authors = listOf(Author(id = "", name = creatorName, url = creatorUrl, username = ""))
 
             return Addon(
                 id = extension.id,
+                authors = authors,
                 version = extension.getMetadata()?.version.orEmpty(),
                 permissions = permissions,
-                downloadUrl = extension.url,
+                downloadUrl = extension.getMetadata()?.downloadUrl.orEmpty(),
+                rating = Rating(average, reviewCount),
+                // If we change this, the "Homepage" link will point to something else than AMO.
                 siteUrl = extension.url,
+                iconRequest = extension.getMetadata()?.iconRequest,
                 translatableName = mapOf(Addon.DEFAULT_LOCALE to name),
-                translatableDescription = mapOf(Addon.DEFAULT_LOCALE to description),
-                // We don't have a summary when we create an add-on from a WebExtension instance so let's
-                // re-use description...
+                translatableDescription = mapOf(Addon.DEFAULT_LOCALE to fullDescription),
+                // The description is the summary on AMO and given we're getting the data from AMO under the hood,
+                // everything should be fine.
                 translatableSummary = mapOf(Addon.DEFAULT_LOCALE to description),
-                updatedAt = "1970-01-01T00:00:00Z",
+                updatedAt = extension.getMetadata()?.updateDate.orEmpty(),
                 installedState = installedState,
             )
         }

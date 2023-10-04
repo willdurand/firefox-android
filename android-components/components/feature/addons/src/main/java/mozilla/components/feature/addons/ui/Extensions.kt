@@ -21,9 +21,16 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * Used to parse [Addon.createdAt] and [Addon.updatedAt].
+ * Used to parse [Addon.updatedAt].
  */
-private val dateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROOT).apply {
+private val amoDateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ROOT).apply {
+    timeZone = TimeZone.getTimeZone("GMT")
+}
+
+/**
+ * Use to parse [Addon.updatedAt] when the date comes from Gecko (and not directly from the AMO API).
+ */
+private val isoDateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'", Locale.ROOT).apply {
     timeZone = TimeZone.getTimeZone("GMT")
 }
 
@@ -43,17 +50,18 @@ fun Addon.translateSummary(context: Context): String = translatableSummary.trans
 fun Addon.translateDescription(context: Context): String = translatableDescription.translate(this, context)
 
 /**
- * The date the add-on was created, as a JVM date object.
- */
-val Addon.createdAtDate: Date get() =
-    // This method never returns null and will throw a ParseException if parsing fails
-    dateParser.parse(createdAt)!!
-
-/**
  * The date of the last time the add-on was updated by its developer(s),
  * as a JVM date object.
  */
-val Addon.updatedAtDate: Date get() = dateParser.parse(updatedAt)!!
+val Addon.updatedAtDate: Date get() {
+    try {
+        return amoDateParser.parse(updatedAt)!!
+    } catch (_: Exception) {
+        // Let's try the next parser...
+    }
+
+    return isoDateParser.parse(updatedAt)!!
+}
 
 /**
  * Try to find the default language on the map otherwise defaults to [Addon.DEFAULT_LOCALE].
